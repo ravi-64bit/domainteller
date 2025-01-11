@@ -1,41 +1,39 @@
-const secret_token=require('./secrets');
+const secret_token = require('./secrets');
 const telegramBot = require('node-telegram-bot-api');
-const axios = require('axios');
-const TelegramBot = require('node-telegram-bot-api');
+const fetch=require('node-fetch');
 
+const token = secret_token.token;
 
-const token=secret_token.token;
-
-const bot = new telegramBot(token, {polling: true});
-
-//bot.setMyDescription("Welcome to the Domainteller bot. Send a domain name to get information about it.");
+const bot = new telegramBot(token, { polling: true });
 
 bot.setMyCommands([
-    {command: '/start', description: 'Welcome message'},
-    {command: '/domain', description: 'Get information about a domain'}
+    { command: '/start', description: 'Welcome message' },
+    { command: '/domain', description: 'Get information about a domain' }
 ]);
 
 bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id,
-         "Welcome");
+    bot.sendMessage(msg.chat.id, "Welcome");
 });
 
+async function getAge(domainAddress) {
+    const url = `https://whatsmydns.net/api/domain?q=${domainAddress}`;
+    try {
+        const response = await axios.get(url, {
+            headers: { 'Content-Type': 'application/json', 'user-agent': 'Mozilla/5.0' },
+            timeout: 5000 // 5-second timeout
+        });
 
-async function getAge(domainAddress){
+        const data = response.data;
+        const creation = new Date(data.data.created);
+        const updation = new Date(data.data.updated);
+        const expiration = new Date(data.data.expires);
 
-    try{
-        let url=`https://whatsmydns.net/api/domain?q=${domainAddress}`;
-        let res=await fetch(url,{signal: AbortSignal.timeout(5000),headers: {'Content-Type': 'application/json', 'user-agent': 'Mozilla/5.0'}});
-        let data=await res.json();
-        let creation=new Date(data.data.created);
-        let updation=new Date(data.data.updated);
-        let expiration=new Date(data.data.expires);
-        let creationDate=creation.toLocateDateString();
-        let creationTime=creation.toLocaleTimeString();
-        let updationDate=updation.toLocateDateString();
-        let updationTime=updation.toLocaleTimeString();
-        let expirationDate=expiration.toLocateDateString();
-        let expirationTime=expiration.toLocaleTimeString();
+        const creationDate = creation.toLocaleDateString();
+        const creationTime = creation.toLocaleTimeString();
+        const updationDate = updation.toLocaleDateString();
+        const updationTime = updation.toLocaleTimeString();
+        const expirationDate = expiration.toLocaleDateString();
+        const expirationTime = expiration.toLocaleTimeString();
 
         return {
             creationDate,
@@ -44,24 +42,33 @@ async function getAge(domainAddress){
             updationTime,
             expirationDate,
             expirationTime
-        }
-    } catch(exc){
-        return exc;
+        };
+    } catch (error) {
+        console.error(error);
+        throw new Error('Failed to fetch domain data or request timed out');
     }
 }
 
-
-bot.on(/^([a-zA-Z0-9-]+\.[a-zA-Z]{2,})$/,async (msg)=>{
-    let domain=msg.text;
-    try{
-        let domainInfo=await getAge(domain);
-        let message=`Domain: ${domain}\nCreation Date: ${domainInfo.creationDate} ${domainInfo.creationTime}\nUpdation Date: ${domainInfo.updationDate} ${domainInfo.updationTime}\nExpiration Date: ${domainInfo.expirationDate} ${domainInfo.expirationTime}`;
+// Handle domain query
+bot.on(/^([a-zA-Z0-9-]+\.[a-zA-Z]{2,})$/, async (msg) => {
+    const domain = msg.text;
+    try {
+        const domainInfo = await getAge(domain);
+        const message = `
+            Domain: ${domain}
+            Creation Date: ${domainInfo.creationDate} ${domainInfo.creationTime}
+            Updation Date: ${domainInfo.updationDate} ${domainInfo.updationTime}
+            Expiration Date: ${domainInfo.expirationDate} ${domainInfo.expirationTime}
+        `;
         bot.sendMessage(msg.chat.id, message);
-    } catch(exc){
-        bot.sendMessage(msg.chat.id, `exception occured`);
+    } catch (error) {
+        bot.sendMessage(msg.chat.id, "Sorry, I couldn't fetch domain information. Please try again later.");
     }
 });
 
-// bot.on('message', (msg) => {
-//     bot.sendMessage(msg.chat.id, `I'm sorry, that's not a valid domain name. Please try again.`);
-// }); 
+// Default message handling (if it's not a valid domain)
+bot.on('message', (msg) => {
+    if (!/^([a-zA-Z0-9-]+\.[a-zA-Z]{2,})$/.test(msg.text)) {
+        bot.sendMessage(msg.chat.id, "I'm sorry, that's not a valid domain name. Please try again.");
+    }
+});
