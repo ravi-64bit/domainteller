@@ -1,8 +1,9 @@
-const secret_token = require('./secrets');
+const secrets = require('./secrets');
 const telegramBot = require('node-telegram-bot-api');
 const fetch=require('node-fetch');
 
-const token = secret_token.token;
+const token = secrets.token;
+const api_key=secrets.api_key;
 
 const bot = new telegramBot(token, { polling: true });
 
@@ -16,33 +17,26 @@ bot.onText(/\/start/, (msg) => {
 });
 
 async function getAge(domainAddress) {
-    const url = `https://whatsmydns.net/api/domain?q=${domainAddress}`;
+    //new url = https://api.api-ninjas.com/v1/domain?domain=example.com
+    const url = `https://api.api-ninjas.com/v1/domain?domain=${domainAddress}`;
     try {
         const response = await axios.get(url, {
-            headers: { 'Content-Type': 'application/json', 'user-agent': 'Mozilla/5.0' },
-            timeout: 5000 // 5-second timeout
+            headers: { 'Content-Type': 'application/json',
+                 'user-agent': 'Mozilla/5.0',
+                'x-api-key': api_key},
+            timeout: 5000 
         });
 
         const data = response.data;
-        const creation = new Date(data.data.created);
-        const updation = new Date(data.data.updated);
-        const expiration = new Date(data.data.expires);
+        
+        let dom=data.domain;
+        let availibility=data.available;
+        let creationDate = new Date(data.creation_date);
+        let registrar=data.registrar;
+        
 
-        const creationDate = creation.toLocaleDateString();
-        const creationTime = creation.toLocaleTimeString();
-        const updationDate = updation.toLocaleDateString();
-        const updationTime = updation.toLocaleTimeString();
-        const expirationDate = expiration.toLocaleDateString();
-        const expirationTime = expiration.toLocaleTimeString();
 
-        return {
-            creationDate,
-            creationTime,
-            updationDate,
-            updationTime,
-            expirationDate,
-            expirationTime
-        };
+        return creationDate;
     } catch (error) {
         console.error(error);
         throw new Error('Failed to fetch domain data or request timed out');
