@@ -16,6 +16,10 @@ bot.onText(/\/start/, (msg) => {
     bot.sendMessage(msg.chat.id, "Welcome");
 });
 
+bot.onText(/\/domain/, (msg) => {
+    bot.sendMessage(msg.chat.id, "Please enter the domain name you want to query.");
+});
+
 async function getAge(domainAddress) {
     //new url = https://api.api-ninjas.com/v1/domain?domain=example.com
     const url = `https://api.api-ninjas.com/v1/domain?domain=${domainAddress}`;
