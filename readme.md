@@ -9,4 +9,4 @@
 
 *Access the bot on [Telegram](https://t.me/domaintellerbot)*
 
-contact me on [email](mailto:ravi004k@gmail.com)
+contact me on my [email](mailto:ravi004k@gmail.com)
