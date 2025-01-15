@@ -1,6 +1,6 @@
 const secrets = require('./secrets');
 const telegramBot = require('node-telegram-bot-api');
-const fetch=require('node-fetch');
+//const fetch=require('node-fetch');
 
 const token = secrets.token;
 const api_key=secrets.api_key;
@@ -21,10 +21,9 @@ async function getAge(domainAddress) {
     const url = `https://api.api-ninjas.com/v1/domain?domain=${domainAddress}`;
     try {
         const response = await axios.get(url, {
-            headers: { 'Content-Type': 'application/json',
-                 'user-agent': 'Mozilla/5.0',
-                'x-api-key': api_key},
-            timeout: 5000 
+            headers: { 'user-agent': 'Mozilla/5.0',
+                'X-Api-Key': api_key},
+                timeout: 5000 
         });
 
         const data = response.data;
@@ -34,9 +33,14 @@ async function getAge(domainAddress) {
         let creationDate = new Date(data.creation_date);
         let registrar=data.registrar;
         
+        if(availibility){
+            return creationDate;
+        }
+        else{
+            return 'Domain not yet registered';
+        }
 
 
-        return creationDate;
     } catch (error) {
         console.error(error);
         throw new Error('Failed to fetch domain data or request timed out');
