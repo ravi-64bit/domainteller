@@ -17,7 +17,11 @@ bot.onText(/\/start/, (msg) => {
 });
 
 bot.onText(/\/domain/, (msg) => {
-    bot.sendMessage(msg.chat.id, "Please enter the domain name you want to query.");
+    bot.sendMessage(msg.chat.id, "Please enter the domain name you want to query."); 
+});
+
+bot.onText(/\/egg/, (msg) => {
+    bot.sendMessage(msg.chat.id, "beep beep boop boop easter egg found");
 });
 
 async function getAge(domainAddress) {
